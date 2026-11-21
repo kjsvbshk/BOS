@@ -1,0 +1,29 @@
+[package]
+name = "pos_desktop"
+description = "Aplicación de escritorio del POS (egui/eframe)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+# Iconos monocromos incluidos en el binario (egui 0.37 ya no los trae por defecto).
+egui = { workspace = true, features = ["monochrome_emoji_fonts"] }
+egui_extras.workspace = true
+# Fecha y hora locales del encabezado.
+chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
+# Renderizador glow y sólo las funciones que usa Windows (ADR-0003).
+eframe = { workspace = true, default-features = false, features = [
+    "glow",
+    "accesskit",
+    "clipboard",
+    "default_fonts",
+    "links",
+] }
+
+[dev-dependencies]
+# wgpu y snapshot sólo se usan para las capturas de revisión; no llegan al ejecutable.
+egui_kittest = { workspace = true, features = ["eframe", "wgpu", "snapshot"] }
+
+[lints]
+workspace = true

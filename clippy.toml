@@ -1,0 +1,3 @@
+# unwrap/expect están prohibidos en el código, pero se permiten en las pruebas.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

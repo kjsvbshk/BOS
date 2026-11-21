@@ -1,0 +1,16 @@
+# Compilación (normalmente fuera del proyecto; ver .cargo/config.toml)
+/target/
+
+# Configuración local de cada máquina
+/.cargo/config.toml
+
+# Capturas temporales de las pruebas de interfaz
+**/tests/snapshots/**/*.diff.png
+**/tests/snapshots/**/*.new.png
+
+# Editores y sistema
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini

@@ -1,0 +1,36 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+publish = false
+
+[workspace.dependencies]
+
+# Todos los crates de egui deben llevar la misma versión (ADR-0002).
+egui = "0.37"
+egui_extras = "0.37"
+egui_kittest = "0.37"
+eframe = "0.37"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+
+# Ejecutable más pequeño y sin información de depuración en release.
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+
+# Dependencias optimizadas en debug: egui sin optimizar se siente lento.
+[profile.dev.package."*"]
+opt-level = 2
