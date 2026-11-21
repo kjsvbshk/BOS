@@ -113,7 +113,7 @@ fn render_reports_for_review() {
 fn render_suggestions_for_review() {
     let mut h = harness([1366.0, 900.0], 1.0);
     open(&mut h, "3");
-    h.get_by_role(egui::Role::TextInput).type_text("Ríos");
+    h.get_by_role(egui::Role::TextInput).type_text("262");
     h.run();
     press(&mut h, Key::ArrowDown);
     save(&mut h, "sugerencias-retiro").unwrap();

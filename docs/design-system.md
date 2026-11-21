@@ -166,3 +166,4 @@ mientras se escribe en un campo.
 | `suggestion_list` / `enter_value` | Sugerencias bajo un campo, filtradas al escribir; Enter usa lo escrito si coincide exactamente, si no la sugerencia seleccionada |
 | `views/keyboard.rs` | Selección por número sin apertura accidental |
 | Importes | El campo muestra «$» y agrupa miles al escribir sin mover el cursor |
+| `InputMask` / `MaskedText` | Máscara de entrada: lo que no corresponde al tipo de campo no se puede escribir ni pegar. Tipos: libre, dígitos, importe, decimal, fecha, teléfono, nombre y código |

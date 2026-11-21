@@ -10,8 +10,8 @@ use super::{
 };
 use crate::{
     components::{
-        FormField, LookupItem, LookupOutcome, LookupState, enter_value, filter_items, info_banner,
-        key_hints, lookup_dialog, single_line, suggestion_list,
+        FormField, InputMask, LookupItem, LookupOutcome, LookupState, MaskedText, enter_value,
+        filter_items, info_banner, key_hints, lookup_dialog, single_line, suggestion_list,
     },
     theme::tokens::{color, space},
     views::{
@@ -55,10 +55,12 @@ impl QueryField {
         ui: &mut Ui,
         label: &str,
         title: &'static str,
+        mask: InputMask,
         items: &[LookupItem],
     ) -> Option<QueryEvent> {
         let response = FormField::new(label).show(ui, |ui| {
-            ui.add(single_line(&mut self.input, ("query", label)).desired_width(280.0))
+            let mut masked = MaskedText::new(&mut self.input, mask);
+            ui.add(single_line(&mut masked, ("query", label)).desired_width(280.0))
         });
         if !self.started {
             self.started = true;
@@ -167,7 +169,13 @@ pub struct ContractQuery {
 impl Screen for ContractQuery {
     fn ui(&mut self, ui: &mut Ui, store: &mut PosStore, today: NaiveDate) -> Outcome {
         let items = contract_items(&FlowCx { store, today }, &ALL_STATUSES);
-        match self.field.ui(ui, "Número de contrato", "Contratos", &items) {
+        match self.field.ui(
+            ui,
+            "Número de contrato",
+            "Contratos",
+            InputMask::Digits { max_len: 8 },
+            &items,
+        ) {
             Some(QueryEvent::Submit(value)) => match value.parse::<u32>() {
                 Ok(number) if store.contract(number).is_some() => {
                     self.shown = Some(number);
@@ -184,7 +192,7 @@ impl Screen for ContractQuery {
             Some(view) => contract_card(ui, &view, store),
             None => info_banner(
                 ui,
-                "Escriba el número o el nombre del cliente, o elija un contrato de la lista.",
+                "Escriba el número o elija un contrato de la lista. F1 busca por cliente o artículo.",
             ),
         }
         Outcome::Stay
@@ -202,7 +210,13 @@ pub struct CustomerQuery {
 impl Screen for CustomerQuery {
     fn ui(&mut self, ui: &mut Ui, store: &mut PosStore, today: NaiveDate) -> Outcome {
         let items = LookupSource::Customers.items_for(store);
-        match self.field.ui(ui, "Cédula del cliente", "Clientes", &items) {
+        match self.field.ui(
+            ui,
+            "Cédula del cliente",
+            "Clientes",
+            InputMask::Digits { max_len: 10 },
+            &items,
+        ) {
             Some(QueryEvent::Submit(value)) => {
                 if store.customer(&value).is_some() {
                     self.shown = Some(value);
@@ -228,7 +242,7 @@ impl Screen for CustomerQuery {
             }
             None => info_banner(
                 ui,
-                "Escriba la cédula o el nombre, o elija un cliente de la lista.",
+                "Escriba la cédula o elija un cliente de la lista. F1 busca por nombre.",
             ),
         }
         Outcome::Stay
@@ -246,10 +260,13 @@ pub struct MovementQuery {
 impl Screen for MovementQuery {
     fn ui(&mut self, ui: &mut Ui, store: &mut PosStore, today: NaiveDate) -> Outcome {
         let items = movement_items(&FlowCx { store, today }, |_| true);
-        match self
-            .field
-            .ui(ui, "Número de movimiento", "Movimientos", &items)
-        {
+        match self.field.ui(
+            ui,
+            "Número de movimiento",
+            "Movimientos",
+            InputMask::Digits { max_len: 8 },
+            &items,
+        ) {
             Some(QueryEvent::Submit(value)) => match value.parse::<u32>() {
                 Ok(number) if store.movement(number).is_some() => {
                     self.shown = Some(number);

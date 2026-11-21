@@ -46,4 +46,4 @@ pub use search_field::SearchField;
 pub use section_tab::SectionTab;
 pub use selector::selector;
 pub use status_badge::{BadgeTone, StatusBadge};
-pub use text_input::single_line;
+pub use text_input::{InputMask, MaskedText, single_line};

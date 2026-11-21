@@ -31,6 +31,12 @@ documentadas por el sistema anterior.
      lista completa. Las sugerencias sólo incluyen registros válidos para la
      operación (por ejemplo, contratos vigentes o vencidos en un retiro).
    - Los importes muestran separadores de miles mientras se escriben.
+   - **Máscaras de entrada**: cada campo sólo admite los caracteres de su tipo,
+     también al pegar (cédula: dígitos, 6–10; teléfono: dígitos y espacios, 7 o
+     10 dígitos; nombres: letras; gramos y porcentajes: un separador decimal;
+     números de contrato, movimiento y códigos: dígitos; fechas: dígitos y `/`).
+     Los campos numéricos filtran las sugerencias por número; la búsqueda por
+     nombre o artículo se hace con F1. La cédula también se valida en `pos_core`.
 3. **Datos de demostración en memoria**: `pos_core` mantiene un almacén en
    memoria con datos de ejemplo (feature `demo-data`). Las operaciones lo
    modifican; nada se guarda al cerrar.

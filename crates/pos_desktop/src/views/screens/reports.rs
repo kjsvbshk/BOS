@@ -12,7 +12,7 @@ use super::{
     queries::{QueryEvent, QueryField},
 };
 use crate::{
-    components::{Card, SecondaryButton, key_hints, selector},
+    components::{Card, InputMask, MaskedText, SecondaryButton, key_hints, selector},
     strings::common,
     theme::tokens::{color, space},
     views::shared::{demo_marker, facts, fmt_date, left, right, table},
@@ -62,10 +62,13 @@ impl Screen for DailyCashScreen {
             self.field.input = fmt_date(today);
             self.date = Some(today);
         }
-        match self
-            .field
-            .ui(ui, "Fecha de la caja (dd/mm/aaaa)", "Fechas", &[])
-        {
+        match self.field.ui(
+            ui,
+            "Fecha de la caja (dd/mm/aaaa)",
+            "Fechas",
+            InputMask::Date,
+            &[],
+        ) {
             Some(QueryEvent::Submit(value)) => self.date = parse_date(&value).or(self.date),
             Some(QueryEvent::Back) => return Outcome::Back,
             None => {}
@@ -211,13 +214,20 @@ impl Screen for ExpensesScreen {
                 ui.spacing_mut().item_spacing.x = space::L;
                 crate::components::FormField::new("Desde (dd/mm/aaaa)").show(ui, |ui| {
                     ui.add(
-                        crate::components::single_line(&mut self.from, "exp_from")
-                            .desired_width(120.0),
+                        crate::components::single_line(
+                            &mut MaskedText::new(&mut self.from, InputMask::Date),
+                            "exp_from",
+                        )
+                        .desired_width(120.0),
                     )
                 });
                 crate::components::FormField::new("Hasta (dd/mm/aaaa)").show(ui, |ui| {
                     ui.add(
-                        crate::components::single_line(&mut self.to, "exp_to").desired_width(120.0),
+                        crate::components::single_line(
+                            &mut MaskedText::new(&mut self.to, InputMask::Date),
+                            "exp_to",
+                        )
+                        .desired_width(120.0),
                     )
                 });
                 crate::components::FormField::new("Orden").show(ui, |ui| {

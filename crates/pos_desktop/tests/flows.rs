@@ -286,11 +286,11 @@ fn amounts_show_thousands_separators_while_typing() {
 }
 
 #[test]
-fn typing_a_customer_name_and_choosing_the_suggestion_selects_the_contract() {
+fn typing_part_of_the_number_and_choosing_the_suggestion_selects_the_contract() {
     let mut harness = app("PRO");
     open(&mut harness, "3");
 
-    harness.get_by_role(egui::Role::TextInput).type_text("Ríos");
+    harness.get_by_role(egui::Role::TextInput).type_text("262");
     harness.run();
     press(&mut harness, Key::ArrowDown);
     press(&mut harness, Key::Enter);
@@ -315,10 +315,109 @@ fn the_highlighted_suggestion_is_previewed_before_confirming() {
     let mut harness = app("PRO");
     open(&mut harness, "3");
 
-    harness.get_by_role(egui::Role::TextInput).type_text("Ríos");
+    harness.get_by_role(egui::Role::TextInput).type_text("262");
     harness.run();
     press(&mut harness, Key::ArrowDown);
 
     // Sin pulsar Enter, la ficha del contrato seleccionado ya está a la vista.
     assert_shows(&harness, "Valor de retiro a hoy");
+}
+
+#[test]
+fn the_customer_id_does_not_accept_letters() {
+    let mut harness = app("PRO");
+    open(&mut harness, "1");
+    press(&mut harness, Key::Enter);
+    type_and_enter(&mut harness, "26613");
+    press(&mut harness, Key::Enter);
+    press(&mut harness, Key::Enter);
+
+    harness
+        .get_by_role(egui::Role::TextInput)
+        .type_text("10a54b");
+    harness.run();
+
+    assert_eq!(
+        harness
+            .get_by_role(egui::Role::TextInput)
+            .value()
+            .as_deref(),
+        Some("1054")
+    );
+}
+
+#[test]
+fn the_weight_accepts_only_digits_and_one_decimal_separator() {
+    let mut harness = app("PRO");
+    open(&mut harness, "1");
+    press(&mut harness, Key::Enter);
+    type_and_enter(&mut harness, "26613");
+    press(&mut harness, Key::Enter);
+    press(&mut harness, Key::Enter);
+    type_and_enter(&mut harness, "1054000001");
+    type_and_enter(&mut harness, "700000");
+    type_and_enter(&mut harness, "1");
+    type_and_enter(&mut harness, "Anillo");
+    press(&mut harness, Key::Enter);
+
+    harness
+        .get_by_role(egui::Role::TextInput)
+        .type_text("2,9g,5");
+    harness.run();
+
+    assert_eq!(
+        harness
+            .get_by_role(egui::Role::TextInput)
+            .value()
+            .as_deref(),
+        Some("2,95")
+    );
+}
+
+fn new_customer_form(harness: &mut egui_kittest::Harness<'_, pos_desktop::PosApp>) {
+    click(harness, "Mantenimiento");
+    open(harness, "1");
+}
+
+#[test]
+fn a_customer_name_does_not_accept_digits() {
+    let mut harness = app("PRO");
+    new_customer_form(&mut harness);
+    type_and_enter(&mut harness, "1054000099");
+
+    harness
+        .get_by_role(egui::Role::TextInput)
+        .type_text("Ana 3 Pérez");
+    harness.run();
+
+    assert_eq!(
+        harness
+            .get_by_role(egui::Role::TextInput)
+            .value()
+            .as_deref(),
+        Some("Ana Pérez")
+    );
+}
+
+#[test]
+fn an_incomplete_phone_number_is_rejected() {
+    let mut harness = app("PRO");
+    new_customer_form(&mut harness);
+    type_and_enter(&mut harness, "1054000099");
+    type_and_enter(&mut harness, "Ana Pérez");
+    press(&mut harness, Key::Enter); // sin dirección
+
+    type_and_enter(&mut harness, "31055");
+
+    assert_shows(&harness, "7 dígitos (fijo) o 10 (celular)");
+}
+
+#[test]
+fn a_short_customer_id_is_rejected() {
+    let mut harness = app("PRO");
+    new_customer_form(&mut harness);
+
+    type_and_enter(&mut harness, "1234");
+
+    assert_shows(&harness, "entre 6 y 10 dígitos");
 }

@@ -988,6 +988,11 @@ impl PosStore {
     pub fn add_customer(&mut self, customer: Customer) -> Result<(), OpError> {
         self.require(Permission::Operate)?;
         let id_number = required_text(&customer.id_number, "Escriba la cédula.")?;
+        if !id_number.chars().all(|c| c.is_ascii_digit()) || !(6..=10).contains(&id_number.len()) {
+            return Err(OpError::InvalidValue(
+                "La cédula debe tener entre 6 y 10 dígitos.",
+            ));
+        }
         if self.customer(&id_number).is_some() {
             return Err(OpError::DuplicateCode(id_number));
         }

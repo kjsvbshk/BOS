@@ -112,6 +112,9 @@ pub mod flow {
     pub const PRESS_F1: &str = "Pulse F1 para consultar.";
     pub const NOT_A_NUMBER: &str = "Escriba un número entero.";
     pub const MUST_BE_POSITIVE: &str = "El valor debe ser mayor que cero.";
+    pub const ID_NUMBER_FORMAT: &str = "La cédula debe tener entre 6 y 10 dígitos.";
+    pub const NAME_FORMAT: &str = "Escriba el nombre con letras (al menos 3).";
+    pub const PHONE_FORMAT: &str = "El teléfono debe tener 7 dígitos (fijo) o 10 (celular).";
     pub const CHOOSE_OPTION: &str = "Elija una de las opciones.";
     pub const ANSWER_YES_NO: &str = "Responda S (sí) o N (no).";
     pub const DATE_FORMAT: &str = "Escriba la fecha como dd/mm/aaaa, por ejemplo 18/11/2026.";

@@ -46,14 +46,12 @@ pub struct Customers;
 impl FlowSpec for Customers {
     fn steps(&self, _cx: &FlowCx<'_>, _values: &Values) -> Vec<StepDef> {
         vec![
-            StepDef::new("id", "Cédula", StepKind::Text { optional: false }),
-            StepDef::new(
-                "name",
-                "Nombre completo",
-                StepKind::Text { optional: false },
-            ),
+            StepDef::new("id", "Cédula", StepKind::IdNumber)
+                .hint("Sólo números, de 6 a 10 dígitos."),
+            StepDef::new("name", "Nombre completo", StepKind::Name).hint("Sólo letras."),
             StepDef::new("address", "Dirección", StepKind::Text { optional: true }),
-            StepDef::new("phone", "Teléfono", StepKind::Text { optional: true }),
+            StepDef::new("phone", "Teléfono", StepKind::Phone { optional: true })
+                .hint("Opcional. Fijo de 7 dígitos o celular de 10."),
         ]
     }
 
@@ -118,13 +116,9 @@ const PROFILE_OPTIONS: [(&str, &str); 2] = [("A", "Administrativo"), ("P", "Prop
 impl FlowSpec for Users {
     fn steps(&self, _cx: &FlowCx<'_>, _values: &Values) -> Vec<StepDef> {
         vec![
-            StepDef::new(
-                "code",
-                "Código del usuario",
-                StepKind::Text { optional: false },
-            )
-            .hint("Por ejemplo REC2."),
-            StepDef::new("name", "Nombre", StepKind::Text { optional: false }),
+            StepDef::new("code", "Código del usuario", StepKind::Code)
+                .hint("Letras y números, sin espacios. Por ejemplo REC2."),
+            StepDef::new("name", "Nombre", StepKind::Name).hint("Sólo letras."),
             StepDef::new(
                 "profile",
                 "Perfil",

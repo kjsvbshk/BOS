@@ -11,7 +11,8 @@ use super::{Outcome, Screen, escape_pressed};
 use crate::{
     components::{
         Card, ColumnSpec, ColumnWidth, ConfirmChoice, ConfirmDialog, DataTable, EmptyState,
-        FormField, PrimaryButton, SecondaryButton, key_hints, selector, single_line,
+        FormField, InputMask, MaskedText, PrimaryButton, SecondaryButton, key_hints, selector,
+        single_line,
     },
     theme::tokens::{color, space},
     views::shared::{demo_marker, facts, fmt_date},
@@ -62,7 +63,13 @@ impl ExpiredScreen {
             ui.horizontal_wrapped(|ui| {
                 ui.spacing_mut().item_spacing.x = space::XL;
                 FormField::new("Código de mercancía (0 = todos)").show(ui, |ui| {
-                    ui.add(single_line(&mut self.code, "expired_code").desired_width(90.0))
+                    ui.add(
+                        single_line(
+                            &mut MaskedText::new(&mut self.code, InputMask::Digits { max_len: 3 }),
+                            "expired_code",
+                        )
+                        .desired_width(90.0),
+                    )
                 });
                 FormField::new("Tipo de contrato").show(ui, |ui| {
                     selector(

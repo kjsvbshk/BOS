@@ -23,9 +23,9 @@ use pos_core::{
 use super::screens::{Outcome, Screen};
 use crate::{
     components::{
-        BadgeTone, Card, LookupItem, LookupOutcome, LookupState, PrimaryButton, SecondaryButton,
-        StatusBadge, enter_value, filter_items, key_hints, lookup_dialog, single_line,
-        suggestion_list,
+        BadgeTone, Card, InputMask, LookupItem, LookupOutcome, LookupState, MaskedText,
+        PrimaryButton, SecondaryButton, StatusBadge, enter_value, filter_items, key_hints,
+        lookup_dialog, single_line, suggestion_list,
     },
     strings::flow as text,
     theme::tokens::{color, font_size, space},
@@ -148,7 +148,49 @@ pub enum StepKind {
         source: LookupSource,
         optional: bool,
     },
+    /// Cédula: de 6 a 10 dígitos.
+    IdNumber,
+    /// Nombre de persona.
+    Name,
+    /// Teléfono fijo (7 dígitos) o celular (10).
+    Phone {
+        optional: bool,
+    },
+    /// Código alfanumérico (se guarda en mayúsculas).
+    Code,
 }
+
+impl StepKind {
+    /// Qué se puede escribir en el campo de este paso.
+    fn mask(&self) -> InputMask {
+        match self {
+            Self::Text { .. } => InputMask::Free { max_len: 120 },
+            Self::Integer { max, .. } => InputMask::Digits {
+                max_len: max.to_string().len(),
+            },
+            Self::Money => InputMask::Money,
+            Self::Rate => InputMask::Decimal { decimals: 2 },
+            Self::Weight { .. } => InputMask::Decimal { decimals: 3 },
+            Self::Date => InputMask::Date,
+            Self::Lookup {
+                source: LookupSource::Customers,
+                ..
+            }
+            | Self::IdNumber => InputMask::Digits {
+                max_len: ID_NUMBER_MAX,
+            },
+            Self::Lookup { .. } => InputMask::Digits { max_len: 3 },
+            Self::Name => InputMask::Name,
+            Self::Phone { .. } => InputMask::Phone,
+            Self::Code => InputMask::Code { max_len: 8 },
+            Self::Choice(_) | Self::YesNo => InputMask::Free { max_len: 0 },
+        }
+    }
+}
+
+/// Dígitos mínimos y máximos de una cédula.
+const ID_NUMBER_MIN: usize = 6;
+const ID_NUMBER_MAX: usize = 10;
 
 /// Un paso de captura.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -543,8 +585,8 @@ impl<S: FlowSpec> FlowScreen<S> {
                 if money {
                     ui.label(RichText::new("$").heading().color(color::TEXT_MUTED));
                 }
-                let edit =
-                    single_line(&mut self.buffer, ("flow_input", step.id)).desired_width(320.0);
+                let mut masked = MaskedText::new(&mut self.buffer, step.kind.mask());
+                let edit = single_line(&mut masked, ("flow_input", step.id)).desired_width(320.0);
                 ui.add(edit).labelled_by(label)
             })
             .inner;
@@ -931,9 +973,15 @@ fn normalize(kind: &StepKind, raw: &str, cx: &FlowCx<'_>) -> Result<String, Stri
             if raw.is_empty() && *optional {
                 return Ok(String::new());
             }
-            Weight::parse(raw)
-                .map(|w| w.as_milligrams().to_string())
-                .map_err(|e| e.to_string())
+            let weight = Weight::parse(raw).map_err(|e| e.to_string())?;
+            if weight.as_milligrams() == 0 {
+                Err(text::MUST_BE_POSITIVE.into())
+            } else {
+                Ok(weight.as_milligrams().to_string())
+            }
+        }
+        StepKind::IdNumber | StepKind::Name | StepKind::Phone { .. } | StepKind::Code => {
+            normalize_person(kind, raw)
         }
         StepKind::Date => parse_date(raw, cx.today).map(|d| d.format("%Y-%m-%d").to_string()),
         StepKind::Choice(options) => options
@@ -957,6 +1005,51 @@ fn normalize(kind: &StepKind, raw: &str, cx: &FlowCx<'_>) -> Result<String, Stri
                 .map(|_| raw.to_owned())
                 .ok_or_else(|| format!("No existe «{raw}». {}", text::PRESS_F1))
         }
+    }
+}
+
+/// Valida los datos de personas: cédula, nombre, teléfono y código de usuario.
+fn normalize_person(kind: &StepKind, raw: &str) -> Result<String, String> {
+    match kind {
+        StepKind::IdNumber => {
+            let digits = raw.chars().filter(char::is_ascii_digit).count();
+            if raw.chars().all(|c| c.is_ascii_digit())
+                && (ID_NUMBER_MIN..=ID_NUMBER_MAX).contains(&digits)
+            {
+                Ok(raw.to_owned())
+            } else {
+                Err(text::ID_NUMBER_FORMAT.into())
+            }
+        }
+        StepKind::Name => {
+            let name = raw.split_whitespace().collect::<Vec<_>>().join(" ");
+            if name.chars().filter(|c| c.is_alphabetic()).count() < 3
+                || !InputMask::Name.accepts(&name)
+            {
+                Err(text::NAME_FORMAT.into())
+            } else {
+                Ok(name)
+            }
+        }
+        StepKind::Phone { optional } => {
+            if raw.is_empty() && *optional {
+                return Ok(String::new());
+            }
+            let digits = raw.chars().filter(char::is_ascii_digit).count();
+            if InputMask::Phone.accepts(raw) && (digits == 7 || digits == 10) {
+                Ok(raw.split_whitespace().collect::<Vec<_>>().join(" "))
+            } else {
+                Err(text::PHONE_FORMAT.into())
+            }
+        }
+        StepKind::Code => {
+            if raw.is_empty() {
+                Err(text::REQUIRED.into())
+            } else {
+                Ok(raw.to_uppercase())
+            }
+        }
+        _ => Ok(raw.to_owned()),
     }
 }
 
@@ -1038,7 +1131,12 @@ fn display(kind: &StepKind, canonical: &str, cx: &FlowCx<'_>) -> String {
             || canonical.to_owned(),
             |name| format!("{canonical} · {name}"),
         ),
-        StepKind::Text { .. } | StepKind::Integer { .. } => canonical.to_owned(),
+        StepKind::Text { .. }
+        | StepKind::Integer { .. }
+        | StepKind::IdNumber
+        | StepKind::Name
+        | StepKind::Phone { .. }
+        | StepKind::Code => canonical.to_owned(),
     }
 }
 

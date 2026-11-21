@@ -32,7 +32,7 @@ pub(super) fn contract_step(label: &str, items: Vec<LookupItem>) -> StepDef {
             max: 99_999_999,
         },
     )
-    .hint("Escriba el número, el cliente o el artículo, o elija de la lista.")
+    .hint("Escriba el número o elíjalo de la lista. F1 busca por cliente o artículo.")
     .suggest("Contratos", items)
 }
 
