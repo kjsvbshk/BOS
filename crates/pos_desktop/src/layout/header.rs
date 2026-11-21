@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use chrono::{Datelike, Local};
 use egui::{Frame, Layout, Margin, Panel, RichText, Ui, vec2};
+use pos_core::application::PosStore;
 
 use crate::{
     components::brand_mark,
@@ -23,10 +24,12 @@ const CLOCK_WIDTH: f32 = 130.0;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HeaderAction {
     OpenComponentGallery,
+    SignOut,
 }
 
-/// Dibuja el encabezado como panel superior.
-pub fn show(ui: &mut Ui) -> Option<HeaderAction> {
+/// Dibuja el encabezado como panel superior. Sin sesión abierta no muestra
+/// el menú del usuario.
+pub fn show(ui: &mut Ui, store: &PosStore, signed_in: bool) -> Option<HeaderAction> {
     Panel::top("app_header")
         .exact_size(size::APP_HEADER_HEIGHT)
         .show_separator_line(false)
@@ -39,27 +42,36 @@ pub fn show(ui: &mut Ui) -> Option<HeaderAction> {
             theme::use_chrome_style(ui);
             egui::Sides::new()
                 .height(ui.available_height())
-                .show(ui, brand_ui, |ui| {
-                    // Derecha a izquierda: el primero queda en el extremo derecho.
-                    let action = user_menu_ui(ui);
-                    ui.separator();
-                    clock_ui(ui);
-                    ui.separator();
-                    action
-                })
+                .show(
+                    ui,
+                    |ui| brand_ui(ui, store.business_name()),
+                    |ui| {
+                        // Derecha a izquierda: el primero queda en el extremo derecho.
+                        let action = if signed_in {
+                            let action = user_menu_ui(ui, store);
+                            ui.separator();
+                            action
+                        } else {
+                            None
+                        };
+                        clock_ui(ui);
+                        ui.separator();
+                        action
+                    },
+                )
                 .1
         })
         .inner
 }
 
-fn brand_ui(ui: &mut Ui) {
+fn brand_ui(ui: &mut Ui, business_name: &str) {
     ui.spacing_mut().item_spacing.x = space::L;
     brand_mark(ui, LOGO_SIDE, color::BEIGE, color::CHROME);
     ui.vertical(|ui| {
         ui.spacing_mut().item_spacing.y = 0.0;
         ui.add_space(space::S);
         ui.label(
-            RichText::new(text::BUSINESS_NAME)
+            RichText::new(business_name.to_uppercase())
                 .font(fonts::bold(font_size::BRAND))
                 .extra_letter_spacing(1.5)
                 .color(color::TEXT_ON_DARK),
@@ -110,11 +122,13 @@ fn clock_ui(ui: &mut Ui) {
         .request_repaint_after(Duration::from_millis(u64::from(to_next_second)));
 }
 
-fn user_menu_ui(ui: &mut Ui) -> Option<HeaderAction> {
+fn user_menu_ui(ui: &mut Ui, store: &PosStore) -> Option<HeaderAction> {
+    let user = store.current_user();
     let label = RichText::new(format!(
-        "{}  {}  {}",
+        "{}  {} · {}  {}",
         icons::USER_CIRCLE,
-        text::DEMO_USER,
+        user.name,
+        user.profile.label(),
         icons::CARET_DOWN
     ))
     .size(font_size::BODY)
@@ -122,6 +136,10 @@ fn user_menu_ui(ui: &mut Ui) -> Option<HeaderAction> {
 
     ui.menu_button(label, |ui| {
         ui.label(RichText::new(text::DEMO_SESSION).color(color::TEXT_MUTED));
+        ui.separator();
+        if ui.button(text::SIGN_OUT).clicked() {
+            return Some(HeaderAction::SignOut);
+        }
         if cfg!(debug_assertions) {
             ui.separator();
             if ui.button(text::COMPONENT_GALLERY).clicked() {

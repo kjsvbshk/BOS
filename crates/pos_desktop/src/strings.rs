@@ -8,18 +8,24 @@ pub const APP_TITLE: &str = "Compraventa 3 Diamantes";
 
 /// Encabezado de la aplicación.
 pub mod header {
-    /// Nombre del negocio, tal como aparece en el encabezado.
-    pub const BUSINESS_NAME: &str = "COMPRAVENTA 3 DIAMANTES";
     pub const SYSTEM_NAME: &str = "Sistema de Gestión de Empeños";
-    /// Usuario simulado: todavía no hay inicio de sesión.
-    pub const DEMO_USER: &str = "Usuario Demo";
-    pub const DEMO_SESSION: &str = "Sesión de demostración: sin usuarios reales.";
+    pub const SIGN_OUT: &str = "Cambiar de usuario";
+    pub const DEMO_SESSION: &str = "Sesión de demostración: sin contraseñas.";
     pub const COMPONENT_GALLERY: &str = "Catálogo de componentes (desarrollo)";
     /// Abreviaturas de los meses para la fecha del encabezado.
     pub const MONTHS: [&str; 12] = [
         "Ene.", "Feb.", "Mar.", "Abr.", "May.", "Jun.", "Jul.", "Ago.", "Sep.", "Oct.", "Nov.",
         "Dic.",
     ];
+}
+
+/// Inicio de sesión simulado.
+pub mod sign_in {
+    pub const TITLE: &str = "Iniciar sesión";
+    pub const SUBTITLE: &str = "Elija su usuario. En la demo no se piden contraseñas.";
+    pub const MOVE: &str = "Moverse";
+    pub const ENTER: &str = "Entrar";
+    pub const PICK: &str = "Elegir por número";
 }
 
 /// Navegación y pantallas provisionales.
@@ -37,6 +43,10 @@ pub mod navigation {
     pub const UNIDENTIFIED_DESCRIPTION: &str = "Falta identificar qué opción del sistema anterior \
         ocupa este lugar del menú.";
     pub const SECTION_PENDING_TITLE: &str = "Opciones pendientes de levantamiento";
+    pub const RESTRICTED_TITLE: &str = "Acceso restringido";
+    pub const SELECT_BY_NUMBER: &str = "Seleccionar por número";
+    pub const MOVE_BETWEEN: &str = "Moverse";
+    pub const OPEN: &str = "Abrir";
     /// Separador de la ruta de navegación («Operaciones › Contratos»).
     pub const BREADCRUMB_SEPARATOR: &str = "  ›  ";
 
@@ -63,10 +73,52 @@ pub const REQUIRED_HINT: &str = "Campo obligatorio";
 /// Componentes genéricos.
 pub mod common {
     pub const SEARCH_HINT: &str = "Buscar…";
+    pub const SEARCH_LABEL: &str = "Escriba para filtrar";
+    pub const SUGGESTIONS: &str = "Mostrando";
+    pub const SUGGESTION_KEYS: &str = "↑ ↓ elegir · F1 ver todos";
     pub const SEARCH_CLEAR: &str = "Limpiar";
     pub const SEARCH_CLEAR_DISABLED: &str = "No hay texto que limpiar";
     pub const CANCEL: &str = "Cancelar";
     pub const LOADING: &str = "Cargando…";
+    pub const NO_MATCHES: &str = "Ningún elemento coincide con la búsqueda.";
+    pub const LOOKUP_KEYS: &str = "↑ ↓ para moverse · Enter para elegir · Esc para cerrar";
+    pub const PRINT: &str = "Imprimir";
+    pub const PRINT_UNAVAILABLE: &str = "La impresión todavía no está disponible en la demo.";
+    pub const DEMO_DATA: &str = "Datos de demostración";
+}
+
+/// Motor de captura por pasos.
+pub mod flow {
+    pub const STEP: &str = "Paso";
+    pub const OF: &str = "de";
+    pub const CONTINUE: &str = "Continuar";
+    pub const BACK: &str = "Atrás";
+    pub const SEARCH: &str = "Buscar";
+    /// Botón de búsqueda con lupa.
+    pub const SEARCH_ICON: &str = "\u{E30C}  Buscar (F1)";
+    pub const SEARCH_ALL: &str = "Ver todos";
+    pub const CHOOSE_SUGGESTION: &str = "Elegir sugerencia";
+    pub const CHOOSE: &str = "Elegir";
+    pub const ANSWER: &str = "Responder";
+    pub const YES: &str = "Sí";
+    pub const NO: &str = "No";
+    pub const SAVE: &str = "Grabar";
+    pub const CORRECT: &str = "Corregir";
+    pub const SAVED: &str = "Operación grabada";
+    pub const REVIEW_TITLE: &str = "Revise la información";
+    pub const REVIEW_QUESTION: &str = "¿Graba la operación o corrige algún dato?";
+    pub const REQUIRED: &str = "Escriba un valor.";
+    pub const REQUIRED_LOOKUP: &str = "Escriba un código o pulse F1 para consultar.";
+    pub const PRESS_F1: &str = "Pulse F1 para consultar.";
+    pub const NOT_A_NUMBER: &str = "Escriba un número entero.";
+    pub const MUST_BE_POSITIVE: &str = "El valor debe ser mayor que cero.";
+    pub const CHOOSE_OPTION: &str = "Elija una de las opciones.";
+    pub const ANSWER_YES_NO: &str = "Responda S (sí) o N (no).";
+    pub const DATE_FORMAT: &str = "Escriba la fecha como dd/mm/aaaa, por ejemplo 18/11/2026.";
+    pub const LOOKUP_CUSTOMERS: &str = "Clientes";
+    pub const LOOKUP_MERCHANDISE: &str = "Códigos de mercancía";
+    pub const LOOKUP_GOLD: &str = "Calidades de oro";
+    pub const LOOKUP_CONCEPTS: &str = "Conceptos de caja y banco";
 }
 
 /// Catálogo de componentes (vista interna de la Fase 1).

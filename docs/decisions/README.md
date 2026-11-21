@@ -13,5 +13,6 @@ cambia, se escribe un ADR nuevo que la reemplaza y se actualiza su estado aquí.
 | [0005](0005-representacion-monetaria.md) | Prohibición de coma flotante para importes | Aceptada |
 | [0006](0006-navegacion-como-catalogo.md) | Navegación definida como catálogo de datos | Aceptada |
 | [0007](0007-referencia-visual-y-navegacion-superior.md) | Referencia visual aprobada y navegación por pestañas superiores (sin sidebar) | Aceptada |
+| [0008](0008-menu-teclado-y-formulas-provisionales.md) | Menú corregido, captura por teclado, datos en memoria y fórmulas provisionales | Aceptada |
 
 Estados posibles: *Propuesta*, *Aceptada*, *Reemplazada por NNNN*, *Descartada*.

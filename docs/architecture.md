@@ -54,8 +54,9 @@ pos_desktop ──► pos_core::application ──► pos_core::domain
 ```
 
 - `pos_core` **no** depende de `egui`, `eframe` ni de ninguna base de datos.
-- `pos_desktop` todavía no depende de `pos_core` (no hay nada que leer hasta la
-  Fase 3); la dependencia se agrega entonces.
+- `pos_core` contiene `domain` (valores sin coma flotante, entidades, fórmulas
+  provisionales), `application` (almacén en memoria, operaciones e informes) y
+  `demo` (datos de ejemplo, feature `demo-data`). Ver ADR-0008.
 - `pos_desktop` sólo llama a `pos_core::application`; nunca toca la
   infraestructura directamente salvo para construir las implementaciones en `main`.
 - Domain y application comparten crate mientras sean pequeños; se separarán en

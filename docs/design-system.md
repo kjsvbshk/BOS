@@ -146,3 +146,23 @@ Reglas de uso:
 - `theme::use_chrome_style(ui)` adapta los controles a las zonas oscuras.
 - `paint::focus_ring` y `paint::icon_circle` son el dibujo compartido de los
   widgets propios.
+
+## 6. Actualización: captura por teclado (2026-11-21, ADR-0008)
+
+| Componente | Propósito |
+|---|---|
+| `FlowScreen` + `FlowSpec` (`views/flow.rs`) | Captura secuencial: un paso activo, pasos anteriores resumidos, revisión «G Grabar / C Corregir» y «¿Continuar? S/N». Las operaciones sólo declaran pasos, validaciones, contexto y qué grabar |
+| `lookup_dialog` | Ventana F1 filtrable: ↑ ↓ para moverse, Enter elige, Esc cierra |
+| `key_hints` | Teclas válidas en cada momento |
+| `views/shared.rs` | Ficha de contrato, de cliente y de movimiento; tablas simples para informes |
+
+Teclas globales: un número (o dos cifras seguidas) **selecciona** la opción o
+acción y Enter la abre; Esc vuelve a la pantalla anterior; en los informes de
+fecha, RePág/AvPág cambian de día y ← → de mes. Los números no se capturan
+mientras se escribe en un campo.
+
+| Componente | Propósito |
+|---|---|
+| `suggestion_list` / `enter_value` | Sugerencias bajo un campo, filtradas al escribir; Enter usa lo escrito si coincide exactamente, si no la sugerencia seleccionada |
+| `views/keyboard.rs` | Selección por número sin apertura accidental |
+| Importes | El campo muestra «$» y agrupa miles al escribir sin mover el cursor |

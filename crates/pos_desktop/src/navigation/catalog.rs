@@ -2,9 +2,11 @@
 //! (ADR-0006). Para agregar, quitar o reordenar opciones sólo se edita este
 //! archivo; las vistas recorren el catálogo.
 //!
-//! Los nombres oficiales (`full_name`) vienen de la distribución aprobada el
-//! 2026-11-21. En las tarjetas se muestran partidos en `title` y `description`,
-//! que juntos repiten el nombre oficial sin agregar información.
+//! Operaciones sigue la distribución corregida del ADR-0008 (09 Consultas
+//! varias, 10 Modificaciones, 11 Otras opciones). Mantenimiento e Informes salen
+//! de la reunión del 2026-11-18 (`docs/levantamiento/`).
+
+use pos_core::domain::Permission;
 
 use crate::theme::icons;
 
@@ -19,17 +21,18 @@ pub enum SectionId {
 /// Si la opción ya tiene definido su proceso.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OptionStatus {
+    /// Funciona en la demo.
+    Available,
     /// Nombre conocido; su proceso todavía no está documentado.
     AwaitingSpecification,
-    /// Todavía no se sabe qué opción del sistema anterior ocupa este lugar.
-    Unidentified,
 }
 
-/// Acción dentro de una opción (por ejemplo, «Reversar» en la opción 09).
+/// Acción dentro de una opción (submenú de 09 y 10).
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct NavAction {
     pub id: &'static str,
     pub label: &'static str,
+    pub description: &'static str,
     pub icon: &'static str,
 }
 
@@ -38,7 +41,7 @@ pub struct NavAction {
 pub struct NavOption {
     /// Identificador estable; no cambia aunque cambie el nombre.
     pub id: &'static str,
-    /// Número de la opción en el sistema original.
+    /// Número de la opción en su sección (el del sistema original en Operaciones).
     pub number: u8,
     /// Nombre oficial completo.
     pub full_name: &'static str,
@@ -48,7 +51,9 @@ pub struct NavOption {
     pub description: &'static str,
     pub icon: &'static str,
     pub status: OptionStatus,
-    /// Acciones que la opción muestra al abrirse.
+    /// Permiso necesario para abrirla.
+    pub permission: Permission,
+    /// Submenú que la opción muestra al abrirse.
     pub actions: &'static [NavAction],
 }
 
@@ -86,15 +91,20 @@ pub struct NavSection {
     pub label: &'static str,
     pub subtitle: &'static str,
     pub icon: &'static str,
-    /// Vacío mientras las opciones estén pendientes de levantamiento.
     pub groups: &'static [OptionGroup],
 }
 
 impl NavSection {
-    /// Todas las opciones de la sección, en su orden original.
+    /// Todas las opciones de la sección, en su orden.
     pub fn options(&self) -> impl Iterator<Item = &'static NavOption> + use<> {
         let groups: &'static [OptionGroup] = self.groups;
         groups.iter().flat_map(|group| group.options.iter())
+    }
+
+    /// Opción por su número.
+    #[must_use]
+    pub fn option_number(&self, number: u8) -> Option<&'static NavOption> {
+        self.options().find(|option| option.number == number)
     }
 }
 
@@ -113,32 +123,98 @@ const fn option(
         title,
         description,
         icon,
-        status: OptionStatus::AwaitingSpecification,
+        status: OptionStatus::Available,
+        permission: Permission::Operate,
         actions: &[],
     }
 }
 
-const CONTRACT_CHANGES: [NavAction; 4] = [
+const fn action(
+    id: &'static str,
+    label: &'static str,
+    description: &'static str,
+    icon: &'static str,
+) -> NavAction {
     NavAction {
-        id: "reverse",
-        label: "Reversar",
-        icon: icons::ARROW_COUNTER_CLOCKWISE,
-    },
-    NavAction {
-        id: "cancel",
-        label: "Anular",
-        icon: icons::PROHIBIT,
-    },
-    NavAction {
-        id: "modify",
-        label: "Modificar",
-        icon: icons::PENCIL_SIMPLE,
-    },
-    NavAction {
-        id: "delete",
-        label: "Borrar",
-        icon: icons::TRASH,
-    },
+        id,
+        label,
+        description,
+        icon,
+    }
+}
+
+// ------------------------------------------------------------------ Operaciones
+
+const QUERIES: [NavAction; 3] = [
+    action(
+        "contract",
+        "Consulta de contrato",
+        "Ficha, pagos y valor de retiro",
+        icons::FILE_TEXT,
+    ),
+    action(
+        "customer",
+        "Consulta por cliente",
+        "Datos e historial de contratos",
+        icons::USER_CIRCLE,
+    ),
+    action(
+        "movement",
+        "Consulta de movimiento",
+        "Detalle por número de movimiento",
+        icons::HASH,
+    ),
+];
+
+const CHANGES: [NavAction; 8] = [
+    action(
+        "modify",
+        "Modificar contrato",
+        "Capital, porcentaje, plazo, fecha o artículo",
+        icons::PENCIL_SIMPLE,
+    ),
+    action(
+        "capital",
+        "Abono a capital",
+        "Reduce el capital del contrato",
+        icons::HAND_COINS,
+    ),
+    action(
+        "revert_transfer",
+        "Revertir paso a propios",
+        "El contrato vuelve a vigencia",
+        icons::ARROW_U_UP_LEFT,
+    ),
+    action(
+        "reverse_withdrawal",
+        "Reversar retiro",
+        "Deshace un retiro hecho por error",
+        icons::ARROW_COUNTER_CLOCKWISE,
+    ),
+    action(
+        "annul_movement",
+        "Anular movimiento",
+        "Por número de movimiento",
+        icons::PROHIBIT,
+    ),
+    action(
+        "annul_sale",
+        "Anular venta o separado",
+        "La mercancía vuelve a propios",
+        icons::TAG,
+    ),
+    action(
+        "annul_layaway_payment",
+        "Anular abono a separado",
+        "Por número de movimiento",
+        icons::RECEIPT,
+    ),
+    action(
+        "annul_contract",
+        "Anular contrato",
+        "Contrato ingresado por error",
+        icons::TRASH,
+    ),
 ];
 
 const CONTRACTS: [NavOption; 4] = [
@@ -166,31 +242,37 @@ const CONTRACTS: [NavOption; 4] = [
         "Devolución a dueño original",
         icons::HAND_COINS,
     ),
-    option(
-        "operations.04",
-        4,
-        "Contratos vencidos – Pasar al inventario de mercancía propia",
-        "Contratos vencidos",
-        "Pasar al inventario de mercancía propia",
-        icons::HOURGLASS_HIGH,
-    ),
+    NavOption {
+        permission: Permission::TransferExpired,
+        ..option(
+            "operations.04",
+            4,
+            "Contratos vencidos – Pasar al inventario de mercancía propia",
+            "Contratos vencidos",
+            "Pasar al inventario de mercancía propia",
+            icons::HOURGLASS_HIGH,
+        )
+    },
 ];
 
 const INVENTORY: [NavOption; 2] = [
-    option(
-        "operations.05",
-        5,
-        "Ingresar mercancía al inventario de mercancía propia",
-        "Ingresar mercancía",
-        "Al inventario de mercancía propia",
-        icons::PACKAGE,
-    ),
+    NavOption {
+        status: OptionStatus::AwaitingSpecification,
+        ..option(
+            "operations.05",
+            5,
+            "Ingresar mercancía al inventario de mercancía propia",
+            "Ingresar mercancía",
+            "Al inventario de mercancía propia",
+            icons::PACKAGE,
+        )
+    },
     option(
         "operations.06",
         6,
         "Salida del inventario de mercancías propias",
         "Salida de mercancías",
-        "Del inventario de mercancías propias",
+        "Ventas, separados y abonos",
         icons::EXPORT,
     ),
 ];
@@ -209,37 +291,41 @@ const MOVEMENTS: [NavOption; 5] = [
         8,
         "Ingresos y/o egresos de banco",
         "Ingresos y/o egresos",
-        "De banco",
+        "De banco (sin uso actual)",
         icons::BANK,
     ),
     NavOption {
-        actions: &CONTRACT_CHANGES,
+        actions: &QUERIES,
         ..option(
             "operations.09",
             9,
-            "Modificación de contratos",
-            "Modificación de contratos",
-            "Reversar, anular, modificar o borrar",
+            "Consultas varias",
+            "Consultas varias",
+            "Contratos, clientes y movimientos",
+            icons::MAGNIFYING_GLASS,
+        )
+    },
+    NavOption {
+        actions: &CHANGES,
+        permission: Permission::ModifyAndAnnul,
+        ..option(
+            "operations.10",
+            10,
+            "Modificar, reversar, anular y borrar",
+            "Modificar, reversar y anular",
+            "Correcciones con trazabilidad",
             icons::ARROWS_CLOCKWISE,
         )
     },
-    option(
-        "operations.10",
-        10,
-        "Otras opciones",
-        "Otras opciones",
-        "Contenido pendiente de definición",
-        icons::SQUARES_FOUR,
-    ),
     NavOption {
-        status: OptionStatus::Unidentified,
+        status: OptionStatus::AwaitingSpecification,
         ..option(
             "operations.11",
             11,
-            "Pendiente de identificar",
-            "Pendiente de identificar",
-            "Opción del sistema anterior por confirmar",
-            icons::QUESTION,
+            "Otras opciones",
+            "Otras opciones",
+            "Contenido pendiente de definición",
+            icons::SQUARES_FOUR,
         )
     },
 ];
@@ -259,6 +345,186 @@ const OPERATION_GROUPS: [OptionGroup; 3] = [
     },
 ];
 
+// ------------------------------------------------------------------ Mantenimiento
+
+const PEOPLE: [NavOption; 2] = [
+    option(
+        "maintenance.01",
+        1,
+        "Clientes",
+        "Clientes",
+        "Registro y consulta de clientes",
+        icons::USERS,
+    ),
+    NavOption {
+        permission: Permission::Administer,
+        ..option(
+            "maintenance.02",
+            2,
+            "Usuarios y perfiles",
+            "Usuarios y perfiles",
+            "Códigos de empleados y permisos",
+            icons::IDENTIFICATION_CARD,
+        )
+    },
+];
+
+const CODES: [NavOption; 3] = [
+    NavOption {
+        permission: Permission::Administer,
+        ..option(
+            "maintenance.03",
+            3,
+            "Códigos de mercancía",
+            "Códigos de mercancía",
+            "Categorías de artículos",
+            icons::TAG,
+        )
+    },
+    NavOption {
+        permission: Permission::Administer,
+        ..option(
+            "maintenance.04",
+            4,
+            "Códigos de calidad de oro",
+            "Calidades de oro",
+            "Quilatajes",
+            icons::DIAMOND,
+        )
+    },
+    NavOption {
+        permission: Permission::Administer,
+        ..option(
+            "maintenance.05",
+            5,
+            "Códigos de caja y banco",
+            "Conceptos de caja",
+            "Gastos, utilidades y ajustes",
+            icons::LIST_BULLETS,
+        )
+    },
+];
+
+const SYSTEM: [NavOption; 2] = [
+    NavOption {
+        permission: Permission::Administer,
+        ..option(
+            "maintenance.06",
+            6,
+            "Datos del negocio",
+            "Datos del negocio",
+            "Nombre de la compraventa",
+            icons::STOREFRONT,
+        )
+    },
+    option(
+        "maintenance.07",
+        7,
+        "Copia de seguridad",
+        "Copia de seguridad",
+        "Respaldo de la información",
+        icons::HARD_DRIVES,
+    ),
+];
+
+const MAINTENANCE_GROUPS: [OptionGroup; 3] = [
+    OptionGroup {
+        label: "Personas",
+        options: &PEOPLE,
+    },
+    OptionGroup {
+        label: "Códigos",
+        options: &CODES,
+    },
+    OptionGroup {
+        label: "Sistema",
+        options: &SYSTEM,
+    },
+];
+
+// ------------------------------------------------------------------ Informes
+
+const CASH_REPORTS: [NavOption; 2] = [
+    option(
+        "reports.01",
+        1,
+        "Caja diaria",
+        "Caja diaria",
+        "Movimientos y resumen de un día",
+        icons::CASH_REGISTER,
+    ),
+    option(
+        "reports.02",
+        2,
+        "Gastos del período",
+        "Gastos del período",
+        "Por código o por fecha",
+        icons::RECEIPT,
+    ),
+];
+
+const ACCUMULATED: [NavOption; 2] = [
+    NavOption {
+        permission: Permission::ViewAccumulated,
+        ..option(
+            "reports.03",
+            3,
+            "Acumulados por operación",
+            "Acumulados del mes",
+            "Comunes e hipotecarios por separado",
+            icons::CHART_BAR,
+        )
+    },
+    NavOption {
+        permission: Permission::ViewAccumulated,
+        ..option(
+            "reports.04",
+            4,
+            "Inventario de contratos vigentes",
+            "Inventario de vigentes",
+            "Por código, oro por quilataje y plata",
+            icons::STACK,
+        )
+    },
+];
+
+const CONTROL: [NavOption; 2] = [
+    option(
+        "reports.05",
+        5,
+        "Inventario de mercancía propia",
+        "Mercancía propia",
+        "Artículos de la compraventa",
+        icons::PACKAGE,
+    ),
+    NavOption {
+        permission: Permission::ViewAccumulated,
+        ..option(
+            "reports.06",
+            6,
+            "Auditor interno",
+            "Auditor interno",
+            "Modificaciones y anulaciones",
+            icons::SHIELD_CHECK,
+        )
+    },
+];
+
+const REPORT_GROUPS: [OptionGroup; 3] = [
+    OptionGroup {
+        label: "Caja",
+        options: &CASH_REPORTS,
+    },
+    OptionGroup {
+        label: "Acumulados",
+        options: &ACCUMULATED,
+    },
+    OptionGroup {
+        label: "Inventarios y control",
+        options: &CONTROL,
+    },
+];
+
 /// Las tres secciones principales, en el orden de la barra superior.
 pub static SECTIONS: [NavSection; 3] = [
     NavSection {
@@ -273,14 +539,14 @@ pub static SECTIONS: [NavSection; 3] = [
         label: "Mantenimiento",
         subtitle: "Administración y configuración del sistema",
         icon: icons::WRENCH,
-        groups: &[],
+        groups: &MAINTENANCE_GROUPS,
     },
     NavSection {
         id: SectionId::Reports,
         label: "Informes",
         subtitle: "Consultas, reportes y análisis de información",
         icon: icons::CHART_BAR,
-        groups: &[],
+        groups: &REPORT_GROUPS,
     },
 ];
 
@@ -333,6 +599,22 @@ mod tests {
     }
 
     #[test]
+    fn option_09_is_queries_and_10_is_modifications() {
+        let operations = section(SectionId::Operations);
+        let titles = (
+            operations.option_number(9).map(|o| o.title),
+            operations.option_number(10).map(|o| o.full_name),
+        );
+        assert_eq!(
+            titles,
+            (
+                Some("Consultas varias"),
+                Some("Modificar, reversar, anular y borrar")
+            )
+        );
+    }
+
+    #[test]
     fn option_ids_are_unique() {
         let ids: Vec<&str> = SECTIONS
             .iter()
@@ -355,18 +637,14 @@ mod tests {
     }
 
     #[test]
-    fn maintenance_and_reports_have_no_options_yet() {
-        assert_eq!(section(SectionId::Maintenance).options().count(), 0);
-        assert_eq!(section(SectionId::Reports).options().count(), 0);
+    fn modifications_offer_the_eight_actions_described_in_the_meeting() {
+        let option = section(SectionId::Operations).option_number(10).unwrap();
+        assert_eq!(option.actions.len(), 8);
     }
 
     #[test]
-    fn contract_modification_offers_its_four_actions() {
-        let option = section(SectionId::Operations)
-            .options()
-            .find(|o| o.number == 9)
-            .unwrap();
-        let labels: Vec<&str> = option.actions.iter().map(|a| a.label).collect();
-        assert_eq!(labels, ["Reversar", "Anular", "Modificar", "Borrar"]);
+    fn expired_contracts_need_the_transfer_permission() {
+        let option = section(SectionId::Operations).option_number(4).unwrap();
+        assert_eq!(option.permission, Permission::TransferExpired);
     }
 }

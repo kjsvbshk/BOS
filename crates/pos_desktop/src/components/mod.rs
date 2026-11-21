@@ -13,7 +13,9 @@ mod data_table;
 mod empty_state;
 mod form_field;
 mod info_banner;
+mod key_hints;
 mod loading;
+mod lookup;
 mod modal;
 mod option_card;
 mod page_header;
@@ -31,7 +33,12 @@ pub use data_table::{ColumnSpec, ColumnWidth, DataTable, TableOutcome};
 pub use empty_state::EmptyState;
 pub use form_field::FormField;
 pub use info_banner::info_banner;
+pub use key_hints::key_hints;
 pub use loading::LoadingIndicator;
+pub use lookup::{
+    LookupItem, LookupOutcome, LookupState, enter_value, filter_items, lookup_dialog,
+    suggestion_list,
+};
 pub use modal::{AppModal, ConfirmChoice, ConfirmDialog, ModalOutcome};
 pub use option_card::OptionCard;
 pub use page_header::PageHeader;

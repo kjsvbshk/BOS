@@ -2,9 +2,10 @@
 //! todavía no tiene opciones, un estado vacío.
 
 use egui::{RichText, Ui};
+use pos_core::application::PosStore;
 
 use crate::{
-    components::{EmptyState, OptionCard, PageHeader, info_banner},
+    components::{EmptyState, OptionCard, PageHeader, info_banner, key_hints},
     navigation::{NavSection, OptionStatus, Route},
     strings::navigation as text,
     theme::{
@@ -19,7 +20,10 @@ const CARD_GAP: f32 = space::M;
 const MAX_COLUMNS: u8 = 3;
 
 /// Dibuja la sección. Devuelve la ruta elegida, si el usuario abrió una opción.
-pub fn show(ui: &mut Ui, section: &'static NavSection) -> Option<Route> {
+///
+/// Las opciones sin permiso se ven deshabilitadas con su motivo. Los números
+/// 1–9 y 0 (= 10) abren la opción correspondiente.
+pub fn show(ui: &mut Ui, section: &'static NavSection, store: &PosStore) -> Option<Route> {
     PageHeader::new(section.icon, section.label)
         .subtitle(section.subtitle)
         .show(ui);
@@ -36,6 +40,12 @@ pub fn show(ui: &mut Ui, section: &'static NavSection) -> Option<Route> {
     let columns = column_count(ui.available_width());
     let card_width = card_width(ui.available_width(), columns);
     let mut chosen = None;
+    // Un número sólo selecciona la tarjeta; Enter la abre (sin aperturas por accidente).
+    let selected = super::keyboard::number_selection(ui, section.label, |n| {
+        section
+            .option_number(n)
+            .is_some_and(|option| store.can(option.permission))
+    });
 
     for group in section.groups {
         ui.label(
@@ -55,8 +65,16 @@ pub fn show(ui: &mut Ui, section: &'static NavSection) -> Option<Route> {
                         option.icon,
                         card_width,
                     )
-                    .pending(option.status == OptionStatus::Unidentified);
-                    if ui.add(card).clicked() {
+                    .pending(option.status == OptionStatus::AwaitingSpecification);
+                    let allowed = store.can(option.permission);
+                    let response = ui
+                        .add_enabled(allowed, card)
+                        .on_disabled_hover_text(option.permission.denied_reason());
+                    if selected == Some(option.number) {
+                        response.request_focus();
+                        response.scroll_to_me(None);
+                    }
+                    if response.clicked() {
                         chosen = Some(Route::Option(option));
                     }
                 }
@@ -67,6 +85,14 @@ pub fn show(ui: &mut Ui, section: &'static NavSection) -> Option<Route> {
     }
 
     info_banner(ui, text::SELECT_OPTION_HINT);
+    key_hints(
+        ui,
+        &[
+            ("1–11", text::SELECT_BY_NUMBER),
+            ("Tab", text::MOVE_BETWEEN),
+            ("Enter", text::OPEN),
+        ],
+    );
     chosen
 }
 

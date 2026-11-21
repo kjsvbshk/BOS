@@ -39,3 +39,22 @@ pub const CARET_RIGHT: &str = "\u{E13A}";
 pub const ARROW_LEFT: &str = "\u{E058}";
 pub const CLIPBOARD_TEXT: &str = "\u{E198}";
 pub const HAMMER: &str = "\u{E80E}";
+
+// Submenús, Mantenimiento e Informes.
+pub const FILE_TEXT: &str = "\u{E23A}";
+pub const HASH: &str = "\u{E2A2}";
+pub const MAGNIFYING_GLASS: &str = "\u{E30C}";
+pub const TAG: &str = "\u{E478}";
+pub const RECEIPT: &str = "\u{E3EC}";
+pub const ARROW_U_UP_LEFT: &str = "\u{E08A}";
+pub const USERS: &str = "\u{E4D6}";
+pub const IDENTIFICATION_CARD: &str = "\u{E2C8}";
+pub const DIAMOND: &str = "\u{E1EC}";
+pub const LIST_BULLETS: &str = "\u{E2F2}";
+pub const STOREFRONT: &str = "\u{E470}";
+pub const HARD_DRIVES: &str = "\u{E2A0}";
+pub const STACK: &str = "\u{E466}";
+pub const SHIELD_CHECK: &str = "\u{E40C}";
+pub const LOCK: &str = "\u{E2FA}";
+pub const USER_SWITCH: &str = "\u{E756}";
+pub const CARET_LEFT: &str = "\u{E138}";

@@ -10,6 +10,8 @@ publish.workspace = true
 # Iconos monocromos incluidos en el binario (egui 0.37 ya no los trae por defecto).
 egui = { workspace = true, features = ["monochrome_emoji_fonts"] }
 egui_extras.workspace = true
+# Lógica del negocio y datos de demostración (ADR-0008).
+pos_core = { path = "../pos_core", features = ["demo-data"] }
 # Fecha y hora locales del encabezado.
 chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
 # Renderizador glow y sólo las funciones que usa Windows (ADR-0003).
@@ -24,6 +26,7 @@ eframe = { workspace = true, default-features = false, features = [
 [dev-dependencies]
 # wgpu y snapshot sólo se usan para las capturas de revisión; no llegan al ejecutable.
 egui_kittest = { workspace = true, features = ["eframe", "wgpu", "snapshot"] }
+chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
 
 [lints]
 workspace = true

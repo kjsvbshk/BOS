@@ -1,8 +1,12 @@
 # POS Pawnshop
 
 Aplicación de escritorio para la gestión de una casa de empeños, en Rust con
-egui/eframe. Estado actual: **demo en construcción** (Fase 1 completada: sistema
-visual y componentes base).
+egui/eframe. Estado actual: **demo de flujos completos** (ADR-0008): todas las
+operaciones descritas por el cliente se recorren con teclado, con datos de
+demostración en memoria y fórmulas provisionales. Ver `docs/plan-demo-flujos.md`.
+
+Al abrirla, elija un usuario: «Propietario» ve todo; «Recepción» (perfil
+administrativo) no puede pasar vencidos a propios, modificar ni ver acumulados.
 
 ## Requisitos
 
@@ -31,3 +35,4 @@ cargo test -p pos_desktop --test review -- --ignored --nocapture   # capturas de
 | `docs/design-system.md` | Tokens, componentes y reglas visuales |
 | `docs/roadmap.md` | Plan por fases |
 | `docs/decisions/` | Registro de decisiones (ADR) |
+| `docs/levantamiento/` | Reunión con el cliente, glosario, fichas y preguntas |

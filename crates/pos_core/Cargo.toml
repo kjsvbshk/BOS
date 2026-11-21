@@ -6,6 +6,12 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
+[dependencies]
+# Fechas de contratos y movimientos (sin reloj: la fecha de trabajo la da la app).
+chrono = { version = "0.4.45", default-features = false, features = ["std"] }
+# Errores de dominio con mensaje para el usuario.
+thiserror = "2"
+
 [features]
 # Datos simulados para la demo. Nunca se activa en una compilación de producción.
 demo-data = []
