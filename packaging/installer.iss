@@ -2,7 +2,7 @@
 ; packaging/build-package.ps1 con la versión y las carpetas correctas.
 
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "1.0.0"
 #endif
 #ifndef SourceDir
   #define SourceDir "..\dist\Compraventa3Diamantes"
