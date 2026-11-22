@@ -1,0 +1,103 @@
+# Compila, prueba y empaqueta la aplicación de Windows.
+#
+# - Push a main y pull requests: formato, clippy, pruebas, y genera el
+#   instalador y el portable como artefactos de la ejecución.
+# - Release publicada: además verifica que la etiqueta (vX.Y.Z) coincida con la
+#   versión de Cargo.toml y adjunta los archivos a la release.
+
+name: Compilación y paquetes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+# Una sola ejecución por rama o release; una nueva cancela la anterior.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Formato, clippy y pruebas
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # rustup lee rust-toolchain.toml e instala el canal y los componentes.
+      - name: Toolchain de Rust
+        run: rustup show
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Formato
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+      - name: Pruebas
+        run: cargo test --workspace --all-features --locked
+
+  package:
+    name: Instalador de Windows
+    needs: check
+    runs-on: windows-latest
+    permissions:
+      contents: write # para adjuntar archivos a la release
+    env:
+      BOS_PACKAGE_TARGET_DIR: ${{ github.workspace }}\target\package
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain de Rust
+        run: rustup show
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: package
+
+      - name: Versión de la release igual a la de Cargo.toml
+        if: github.event_name == 'release'
+        shell: pwsh
+        run: |
+          $metadata = cargo metadata --no-deps --format-version 1 | ConvertFrom-Json
+          $version = ($metadata.packages | Where-Object { $_.name -eq 'pos_desktop' }).version
+          $tag = '${{ github.event.release.tag_name }}'.TrimStart('v')
+          if ($tag -ne $version) {
+            Write-Error "La etiqueta '${{ github.event.release.tag_name }}' no coincide con la versión $version de Cargo.toml. Actualice [workspace.package] version o la etiqueta."
+            exit 1
+          }
+
+      - name: Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Generar instalador y portable
+        shell: pwsh
+        run: ./packaging/build-package.ps1
+
+      - name: Guardar como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: Compraventa3Diamantes-windows
+          path: |
+            dist/*.exe
+            dist/*.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Adjuntar a la release
+        if: github.event_name == 'release'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload '${{ github.event.release.tag_name }}' (Get-ChildItem dist -File | Where-Object Extension -in '.exe', '.zip').FullName --clobber

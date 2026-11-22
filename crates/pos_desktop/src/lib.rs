@@ -30,11 +30,18 @@ pub fn native_options() -> eframe::NativeOptions {
             .with_title(strings::APP_TITLE)
             .with_app_id(APP_ID)
             .with_inner_size(INITIAL_WINDOW_SIZE)
-            .with_min_inner_size(MIN_WINDOW_SIZE),
+            .with_min_inner_size(MIN_WINDOW_SIZE)
+            .with_icon(window_icon()),
         // OpenGL por compatibilidad con equipos modestos y escritorio remoto (ADR-0003).
         renderer: eframe::Renderer::Glow,
         ..Default::default()
     }
+}
+
+/// Ícono de la ventana y de la barra de tareas (el diamante del logotipo).
+fn window_icon() -> egui::IconData {
+    eframe::icon_data::from_png_bytes(include_bytes!("../assets/icon/app-256.png"))
+        .unwrap_or_default()
 }
 
 /// Abre la ventana principal y ejecuta la aplicación hasta que se cierre.

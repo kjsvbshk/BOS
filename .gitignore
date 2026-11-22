@@ -1,6 +1,9 @@
 # Compilación (normalmente fuera del proyecto; ver .cargo/config.toml)
 /target/
 
+# Paquetes generados (instalador y portable)
+/dist/
+
 # Configuración local de cada máquina
 /.cargo/config.toml
 
