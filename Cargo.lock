@@ -2629,7 +2629,7 @@ dependencies = [
 
 [[package]]
 name = "pos_core"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "thiserror 2.0.21",
@@ -2637,7 +2637,7 @@ dependencies = [
 
 [[package]]
 name = "pos_desktop"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "eframe",
