@@ -1,4 +1,4 @@
-# POS Pawnshop
+# POS Empeños
 
 Aplicación de escritorio para la gestión de una casa de empeños, en Rust con
 egui/eframe. Estado actual: **demo de flujos completos** (ADR-0008): todas las
